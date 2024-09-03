@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="icon" type="image/png" href="static/favicon.png">
+    <title>Kiwi IRC</title>
+    <style>
+    /* target specific styles */
+    body {
+    	/* disable the 'pull down to refresh' on mobiles */
+    	overflow: hidden;
+    }
+    </style>
+    <style class="embedly-css">
+        .card .hdr {
+            display:none;
+        }
+    </style>
+
+    <style>
+        .kiwi-sponsor {
+            position: absolute;
+            z-index: 20;
+            bottom: 0px;
+            left: 0;
+            width: 100%;
+            padding: 10px 0;
+            font-size: 0.6em;
+            color: #333333;
+        }
+
+        .kiwi-sponsor a {
+            color: #333333;
+        }
+
+        @media screen and (max-width: 850px) {
+            .kiwi-sponsor, .kiwi-sponsor a {
+                bottom: -40px;
+            }
+            .kiwi-sponsor:hover {
+                background: #fff;
+            }
+        }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+  </body>
+</html>

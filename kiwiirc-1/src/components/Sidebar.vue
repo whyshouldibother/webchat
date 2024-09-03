@@ -1,0 +1,337 @@
+<template>
+    <div :class="['kiwi-sidebar-section-' + uiState.section()]" class="kiwi-sidebar kiwi-theme-bg">
+        <template v-if="buffer">
+            <template v-if="buffer.isChannel()">
+
+                <span v-if="uiState.isOpen" class="kiwi-sidebar-options">
+                    <div v-if="uiState.canPin" class="kiwi-sidebar-pin" @click="uiState.pin()">
+                        <i class="fa fa-thumb-tack" aria-hidden="true"/>
+                    </div>
+                    <div class="kiwi-sidebar-close" @click="uiState.close()">
+                        {{ $t('close') }}<i class="fa fa-times" aria-hidden="true"/>
+                    </div>
+                </span>
+
+                <div
+                    v-if="uiState.section() === 'settings'"
+                    class="kiwi-sidebar-buffersettings"
+                    @click.stop=""
+                >
+
+                    <tabbed-view>
+                        <tabbed-tab :header="$t('settings')" :focus="true">
+                            <h3>{{ $t('channel_settings') }}</h3>
+                            <hr>
+                            <channel-info :buffer="buffer"/>
+
+                            <div class="kiwi-sidebar-settings">
+                                <h3>{{ $t('side_settings') }}</h3>
+                                <hr>
+                                <form class="u-form">
+                                    <label class="u-checkbox-wrapper">
+                                        <span>{{ $t('side_joins') }}</span>
+                                        <input v-model="settingShowJoinParts" type="checkbox">
+                                    </label>
+                                    <label class="u-checkbox-wrapper">
+                                        <span>{{ $t('side_topics') }}</span>
+                                        <input v-model="settingShowTopics" type="checkbox">
+                                    </label>
+                                    <label class="u-checkbox-wrapper">
+                                        <span>{{ $t('side_nick_changes') }}</span>
+                                        <input v-model="settingShowNickChanges" type="checkbox">
+                                    </label>
+                                    <label class="u-checkbox-wrapper">
+                                        <span>{{ $t('side_mode_changes') }}</span>
+                                        <input v-model="settingShowModeChanges" type="checkbox">
+                                    </label>
+                                    <label class="u-checkbox-wrapper">
+                                        <span>{{ $t('side_formatting') }}</span>
+                                        <input v-model="settingExtraFormatting" type="checkbox">
+                                    </label>
+                                    <label class="u-checkbox-wrapper">
+                                        <span>{{ $t('side_colours') }}</span>
+                                        <input v-model="settingColouredNicklist" type="checkbox">
+                                    </label>
+                                </form>
+                            </div>
+                        </tabbed-tab>
+                        <tabbed-tab :header="$t('banned')">
+                            <channel-banlist :buffer="buffer"/>
+                        </tabbed-tab>
+                        <tabbed-tab :header="$t('notifications')">
+                            <buffer-settings :buffer="buffer"/>
+                        </tabbed-tab>
+                        <tabbed-tab
+                            v-for="item in pluginUiElements"
+                            :key="item.id"
+                            :header="item.title"
+                        >
+                            <div :is="item.component" v-bind="item.props"/>
+                        </tabbed-tab>
+                    </tabbed-view>
+                </div>
+
+                <div
+                    v-else-if="uiState.section() === 'user'"
+                    class="kiwi-sidebar-userbox"
+                    @click.stop=""
+                >
+                    <user-box
+                        :user="uiState.sidebarUser"
+                        :buffer="buffer"
+                        :network="network"
+                    />
+                </div>
+
+                <nicklist
+                    v-else-if="uiState.section() === 'nicklist' || uiState.section() === ''"
+                    :network="network"
+                    :buffer="buffer"
+                    :ui-state="uiState"
+                />
+            </template>
+            <template v-else-if="buffer.isQuery()">
+                <!-- TODO:
+                invite to an open channel<br />
+                ignore this user<br />
+                something else
+                -->
+            </template>
+        </template>
+        <template v-else>
+            {{ $t('side_buffer') }}
+        </template>
+    </div>
+</template>
+
+<script>
+
+import UserBox from '@/components/UserBox';
+import GlobalApi from '@/libs/GlobalApi';
+import BufferSettings from './BufferSettings';
+import ChannelInfo from './ChannelInfo';
+import ChannelBanlist from './ChannelBanlist';
+import Nicklist from './Nicklist';
+
+export default {
+    components: {
+        BufferSettings,
+        ChannelInfo,
+        ChannelBanlist,
+        Nicklist,
+        UserBox,
+    },
+    props: ['network', 'buffer', 'uiState'],
+    data: function data() {
+        return {
+            pluginUiElements: GlobalApi.singleton().sideBarPlugins,
+        };
+    },
+    computed: {
+        settingShowJoinParts: {
+            get: function getSettingShowJoinParts() {
+                return this.buffer.setting('show_joinparts');
+            },
+            set: function setSettingShowJoinParts(newVal) {
+                return this.buffer.setting('show_joinparts', newVal);
+            },
+        },
+        settingShowTopics: {
+            get: function getSettingShowTopics() {
+                return this.buffer.setting('show_topics');
+            },
+            set: function setSettingShowTopics(newVal) {
+                return this.buffer.setting('show_topics', newVal);
+            },
+        },
+        settingShowNickChanges: {
+            get: function getSettingShowNickChanges() {
+                return this.buffer.setting('show_nick_changes');
+            },
+            set: function setSettingShowNickChanges(newVal) {
+                return this.buffer.setting('show_nick_changes', newVal);
+            },
+        },
+        settingShowModeChanges: {
+            get: function getSettingShowModeChanges() {
+                return this.buffer.setting('show_mode_changes');
+            },
+            set: function setSettingShowModeChanges(newVal) {
+                return this.buffer.setting('show_mode_changes', newVal);
+            },
+        },
+        settingColouredNicklist: {
+            get: function getSettingShowJoinParts() {
+                return this.buffer.setting('coloured_nicklist');
+            },
+            set: function setSettingShowJoinParts(newVal) {
+                return this.buffer.setting('coloured_nicklist', newVal);
+            },
+        },
+        settingExtraFormatting: {
+            get: function settingExtraFormatting() {
+                return this.buffer.setting('extra_formatting');
+            },
+            set: function settingExtraFormatting(newVal) {
+                return this.buffer.setting('extra_formatting', newVal);
+            },
+        },
+        bufferType: function bufferType() {
+            let type = '';
+
+            if (!this.buffer) {
+                type = 'none';
+            } else if (this.buffer.isServer()) {
+                type = 'server';
+            } else if (this.buffer.isChannel()) {
+                type = 'channel';
+            } else if (this.buffer.isQuery()) {
+                type = 'query';
+            }
+
+            return type;
+        },
+    },
+};
+</script>
+
+<style lang="less">
+.kiwi-sidebar {
+    background: #fff;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.kiwi-sidebar.kiwi-sidebar-section-settings {
+    width: 500px;
+    max-width: 500px;
+}
+
+.kiwi-sidebar .u-form textarea {
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 80px;
+    resize: vertical;
+}
+
+.kiwi-sidebar-options {
+    display: block;
+    cursor: pointer;
+    font-weight: 600;
+    width: 100%;
+    position: relative;
+    box-sizing: border-box;
+    text-transform: uppercase;
+    line-height: 50px;
+    vertical-align: top;
+}
+
+.kiwi-sidebar-options .kiwi-sidebar-pin {
+    position: absolute;
+    padding: 0 10px;
+    height: 100%;
+    line-height: 52px;
+    z-index: 1;
+    transition: background 0.3s;
+}
+
+.kiwi-sidebar-options .kiwi-sidebar-close {
+    width: 100%;
+    display: inline-block;
+    padding: 0 20px 0 40px;
+    text-align: right;
+    box-sizing: border-box;
+    transition: background 0.3s;
+}
+
+.kiwi-sidebar-options .kiwi-sidebar-close i {
+    margin-left: 10px;
+    font-size: 1.5em;
+    line-height: 47px;
+}
+
+.kiwi-sidebar-buffersettings {
+    overflow: hidden;
+    height: 100%;
+}
+
+.kiwi-sidebar-buffersettings .u-tabbed-content {
+    padding: 1em;
+}
+
+.kiwi-sidebar-userbox {
+    overflow: hidden;
+    height: 100%;
+}
+
+.kiwi-sidebar-settings {
+    margin-bottom: 20px;
+}
+
+.kiwi-sidebar-settings label {
+    display: block;
+}
+
+@keyframes settingstransition {
+    from { margin-top: 50px; }
+    to { margin-top: 100px; }
+}
+
+@keyframes nicklisttransition {
+    from { height: 0; }
+    to { height: 100%; }
+}
+
+.kiwi-channelbanlist-empty {
+    margin-top: 10px;
+}
+
+@media screen and (max-width: 769px) {
+    .kiwi-sidebar .u-tabbed-view-tab {
+        width: 100%;
+    }
+
+    .kiwi-sidebar .u-tabbed-view-tab.u-tabbed-view-tab--active {
+        border-bottom: 3px solid #42b992;
+        margin-bottom: 0;
+    }
+
+    .kiwi-sidebar .u-form input[type="checkbox"] {
+        margin-right: 4px;
+    }
+
+    .kiwi-sidebar .u-form label span {
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    .kiwi-container--sidebar-open .kiwi-sidebar {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .kiwi-sidebar-buffersettings {
+        padding-bottom: 10px;
+    }
+
+    .kiwi-channelbanlist {
+        float: left;
+        width: 100%;
+    }
+
+    .kiwi-channelbanlist-table {
+        margin-top: 30px;
+    }
+
+    .kiwi-channelbanlist .u-form {
+        line-height: 10px;
+    }
+
+    .kiwi-sidebar-options {
+        line-height: 47px;
+    }
+}
+
+</style>
